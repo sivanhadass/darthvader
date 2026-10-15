@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דארת' ויידר הישראלי</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #030712;
+            color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* רקע כוכבים וערפילית כחולה */
+        #starfieldCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .blue-nebula {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            background: 
+                radial-gradient(circle at 15% 25%, rgba(29, 78, 216, 0.35) 0%, transparent 35%),
+                radial-gradient(circle at 85% 75%, rgba(30, 58, 138, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 50% 40%, rgba(14, 116, 144, 0.25) 0%, transparent 45%);
+            filter: blur(50px);
+        }
+
+        /* סרגל ניווט עליון */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            width: 100%;
+            background: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: #d1d5db;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover { color: #ef4444; }
+
+        /* המשטח הראשי */
+        .page-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.52);
+            backdrop-filter: blur(10px);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 3rem 2.5rem;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            flex-grow: 1;
+        }
+
+        section { margin-bottom: 4rem; }
+        h1, h2, h3 { margin-top: 0; }
+
+        .section-title {
+            font-size: 1.6rem;
+            color: #ffffff;
+            border-bottom: 2px solid #b91c1c;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* שתי תמונות זו לצד זו במקום הסרטון */
+        .images-container {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        .site-image {
+            width: 35%;
+            min-width: 250px;
+            height: auto;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            object-fit: cover;
+        }
+
+        /* תיבת השם בראש הציטוטים */
+        .global-name-box {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .global-name-box input {
+            background: #111827;
+            border: 1px solid #ef4444;
+            color: white;
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.375rem;
+            width: 220px;
+        }
+
+        /* קוביות הציטוטים הנקיות */
+        .quote-block {
+            background: rgba(255, 255, 255, 0.03);
+            border-right: 3px solid #ef4444;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        .quote-text {
+            direction: ltr;
+            text-align: left;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .highlight-text {
+            color: #f87171;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .input-box {
+            width: 100%;
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            color: white;
+            margin-top: 0.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .btn {
+            background: #b91c1c;
+            color: white;
+            font-weight: bold;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.85rem 1.5rem;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: #dc2626; }
+
+        .custom-list {
+            list-style: none;
+            padding-right: 0;
+            line-height: 2;
+        }
+
+        .custom-list li {
+            position: relative;
+            padding-right: 1.75rem;
+        }
+
+        .custom-list li::before {
+            content: "✓";
+            position: absolute;
+            right: 0;
+            color: #ef4444;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blue-nebula"></div>
+    <canvas id="starfieldCanvas"></canvas>
+
+    <header class="top-bar">
+        <h1 style="margin: 0; font-size: 1.4rem; color: white;">🌌 דארת' ויידר הישראלי</h1>
+        <nav class="nav-links">
+            <a href="#home" class="nav-link">עמוד הבית</a>
+            <a href="#about" class="nav-link">על הדמות והשחקן</a>
+            <a href="#services" class="nav-link">מה עושים עם זה</a>
+            <a href="#quotes" class="nav-link">ציטוטים נבחרים</a>
+            <a href="#contact" class="nav-link">צרו קשר</a>
+        </nav>
+    </header>
+
+    <main class="page-wrapper">
+
+        <section id="home" style="text-align: center;">
+            <h2 style="font-size: 2.3rem; color: #dc2626; margin-bottom: 0.5rem;">דארת' ויידר הישראלי!</h2>
+            <p style="font-size: 1.15rem; font-weight: bold; color: #e5e7eb;">הפתעה גדולה לכל אירוע! חוויה בלתי נשכחת שמשאירה חותם</p>
+            
+            <!-- שתי תמונות זו לצד זו -->
+            <div class="images-container">
+                <img src="image2.jpg" alt="דארת ויידר הישראלי 1" class="site-image">
+                <img src="image1.jpg" alt="דארת ויידר הישראלי 2" class="site-image">
+            </div>
+
+            <div style="text-align: right; line-height: 1.8; margin-top: 2rem;">
+                <h3 style="color: #ef4444;">למה לבחור בנו?</h3>
+                <ul class="custom-list">
+                    <li>דמות מוכרת ואייקונית שנכנסת ישירות ללב האירוע</li>
+                    <li>הפתעה מוחלטת ומרגשת לכל האורחים והמשתתפים</li>
+                    <li>תפירה וליווי אישי לכל אירוע, עם גמישות מלאה בטקסטים</li>
+                    <li>אין אחד שלא יאהב ויתלהב!</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="about">
+            <h2 class="section-title">מי זה DARTH VADER?</h2>
+            <div style="line-height: 1.8; color: #d1d5db;">
+                <h3 style="color: #ef4444; margin-top: 1rem;">על הדמות</h3>
+                <p>
+                    דארת' ויידר, שבעברו היה אביר הג'דיי הגיבור אנאקין סקייווקר, פותה על ידי הצד האפל של ה"כוח".
+                    ויידר, שנותר מצולק לנצח בעקבות תבוסתו במוסטפאר, הפך ללורד סית' בעל תוספות קיברנטיות.
+                    עם עליית האימפריה, הוביל ויידר את חיסול מסדר הג'דיי ואת המצוד אחר הניצולים.
+                    הוא נותר בשירות הקיסר – דארת' סידיוס המרושע – במשך עשרות שנים, כשהוא אוכף את רצון אדונו ופועל למחוץ את ברית המורדים.
+                </p>
+
+                <h3 style="color: #ef4444; margin-top: 1.5rem;">על השחקן</h3>
+                <p>
+                    הפעלת הדמות של דארת' ויידר הישראלי מבוססת על השראה מדויקת מהדמות המקורית, ונעשית תוך שימוש בתלבושת רשמית, איכותית ומקורית מתוצרת דיסני.
+                    אנו מתמחים בהבאת הנוכחות העוצמתית, הסאונד, הצעדים והכריזמה האייקונית לתוך האירוע שלכם.
+                </p>
+            </div>
+        </section>
+
+        <section id="services">
+            <h2 class="section-title">מה עושים עם זה?</h2>
+            <p style="line-height: 1.7; color: #d1d5db;">אנו מציעים הגעה ייחודית של הדמות האייקונית למגוון רחב של אירועים ארגוניים ופרטיים:</p>
+            
+            <div style="margin-top: 1.5rem;">
+                <h3 style="color: #ef4444; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 0.3rem;">אירועי ארגונים וחברות</h3>
+                <ul class="custom-list">
+                    <li>אירועי מכירות וקד"מ</li>
+                    <li>אירועי השקה ומיתוג עסקי</li>
+                    <li>כנסים מקצועיים וימי עיון</li>
+                    <li>טקסים, כנסים ואירועי חברה</li>
+                    <li>תערוכות ואירועי קונספט</li>
+                </ul>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <h3 style="color: #ef4444; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 0.3rem;">אירועים פרטיים</h3>
+                <ul class="custom-list">
+                    <li>חגיגות ימי הולדת והופעות</li>
+                    <li>שילוב ברכות מותאמות אישית למי שמפתיעים אותו</li>
+                    <li>יצירת רגעים מרגשים שמשאירים חותם וזיכרונות ייחודיים</li>
+                </ul>
+            </div>
+
+            <p style="font-size: 0.9rem; color: #9ca3af; margin-top: 1.5rem; background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 0.5rem;">
+                💡 ניתן לתכנן מראש התאמת משפטי מפתח לפי סוג האירוע, הקהל ואנשי המפתח בארגון!
+            </p>
+        </section>
+
+        <!-- ציטוטים נבחרים -->
+        <section id="quotes">
+            <h2 class="section-title">ציטוטים נבחרים של DARTH VADER</h2>
+            
+            <div class="global-name-box">
+                <label for="globalNameInput" style="font-size: 0.95rem; color: #d1d5db;">הכנס שם להתאמה אישית:</label>
+                <input type="text" id="globalNameInput" placeholder="הקלד שם כאן..." oninput="updateAllQuotes()">
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"The Force is with you, young <span class="highlight-text name-placeholder">_____</span>, but you are not a Jedi yet."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"Apology accepted, Captain <span class="highlight-text name-placeholder">_____</span>."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"He’s all yours, bounty hunter. Reset the chamber for <span class="highlight-text name-placeholder">_____</span>."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"<span class="highlight-text name-placeholder">_____</span> was weak. I destroyed him."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"I find your lack of faith disturbing."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"No, I am your father."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"Perhaps I can find new ways to motivate them."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"You don’t know the power of the dark side."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"We would be honored, if you would join us."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"Impressive. Most impressive. Obi-Wan has taught you well."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"I am altering the deal. Pray I don’t alter it any further."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"What is thy bidding, my Master?"</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"You have failed me for the last time."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"The circle is now complete."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"That name no longer has any meaning for me."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"Just for once let me look on you with my own eyes."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"This will be a day long remembered."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"All too easy."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"Be careful not to choke on your aspirations."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"Don’t fail me again, Admiral."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"If he could be turned, he would become a powerful ally."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"The ability to destroy a planet is insignificant next to the power of the Force."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"There is no escape. Don’t make me destroy you."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"We meet again at last."</p>
+            </div>
+
+            <div class="quote-block">
+                <p class="quote-text">"When I left you, I was but the learner. Now I am the master."</p>
+            </div>
+        </section>
+
+        <!-- טופס יצירת קשר -->
+        <section id="contact">
+            <h2 class="section-title">צרו קשר</h2>
+            <p style="color: #d1d5db;">אתם מוזמנים להשאיר פרטים וניצור אתכם קשר בהקדם לקביעת שיחה והתאמת האירוע!</p>
+
+            <form id="contactForm" onsubmit="handleFormSubmit(event)" style="margin-top: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.2rem;">שם מלא *</label>
+                <input type="text" name="fullName" required class="input-box">
+
+                <label style="display: block; font-weight: 600; margin-bottom: 0.2rem;">סלולרי *</label>
+                <input type="tel" name="phone" required class="input-box">
+
+                <label style="display: block; font-weight: 600; margin-bottom: 0.2rem;">דוא"ל</label>
+                <input type="email" name="email" class="input-box">
+
+                <label style="display: block; font-weight: 600; margin-bottom: 0.2rem;">במה נוכל לעזור?</label>
+                <textarea name="message" rows="4" class="input-box"></textarea>
+
+                <button type="submit" class="btn">השאירו פרטים ונחזור אליכם</button>
+            </form>
+        </section>
+
+        <section style="font-size: 0.9rem; color: #9ca3af; text-align: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem;">
+            <p>כל הזכויות של הדמות המקורית של דארת' ויידר שייכות לחברת דיסני (Disney).</p>
+            <p>הדמות של דארת' ויידר הישראלי מבוססת על השראה מהדמות המקורית והיא משתמשת בתלבושת רשמית מתוצרת דיסני.</p>
+        </section>
+
+    </main>
+
+    <script>
+        // 1. אנימציית כוכבים ברקע
+        (function() {
+            const canvas = document.getElementById('starfieldCanvas');
+            const ctx = canvas.getContext('2d');
+            let width, height, stars = [];
+            const STAR_COLORS = ['#FFFFFF', '#F0F8FF', '#E0F7FA', '#FFFDE7', '#93C5FD', '#60A5FA'];
+
+            class Star {
+                constructor() { this.init(true); }
+                init(randomY = false) {
+                    this.x = Math.random() * width;
+                    this.y = randomY ? Math.random() * height : height + 10;
+                    this.baseSize = Math.random() * 1.3 + 0.7; 
+                    this.alpha = Math.random() * 0.6 + 0.3;
+                    this.twinkleSpeed = Math.random() * 0.015 + 0.005;
+                    this.twinkleDir = Math.random() > 0.5 ? 1 : -1;
+                    this.vy = -(Math.random() * 0.15 + 0.05); 
+                    this.vx = (Math.random() - 0.5) * 0.05;
+                    this.color = STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)];
+                }
+
+                update() {
+                    this.y += this.vy * 0.4;
+                    this.x += this.vx * 0.4;
+                    if (this.y < -10) this.init(false);
+                    this.alpha += this.twinkleSpeed * this.twinkleDir;
+                    if (this.alpha >= 0.95) this.twinkleDir = -1;
+                    else if (this.alpha <= 0.2) this.twinkleDir = 1;
+                }
+
+                draw() {
+                    ctx.save();
+                    ctx.globalAlpha = this.alpha;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.baseSize * 1.4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                stars = Array.from({ length: 280 }, () => new Star());
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                stars.forEach(s => { s.update(); s.draw(); });
+                requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+            animate();
+        })();
+
+        // 2. עדכון שמות בלייב בציטוטים
+        function updateAllQuotes() {
+            const name = document.getElementById('globalNameInput').value.trim();
+            document.querySelectorAll('.name-placeholder').forEach(el => {
+                el.innerText = name !== '' ? name : '_____';
+            });
+        }
+
+        // 3. טופס יצירת קשר
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            fetch('https://formspree.io/f/maenzeqr', {
+                method: 'POST',
+                body: new FormData(e.target),
+                headers: { 'Accept': 'application/json' }
+            }).then(res => {
+                if (res.ok) { alert('הטופס נשלח בהצלחה!'); e.target.reset(); }
+                else alert('אירעה שגיאה בשליחה.');
+            }).catch(() => alert('שגיאת תקשורת.'));
+        }
+    </script>
+</body>
+</html>
